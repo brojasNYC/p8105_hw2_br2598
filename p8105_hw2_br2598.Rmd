@@ -104,7 +104,7 @@ snp_close = read_csv("./data/snp.csv") %>%
   select(-day) %>% 
   mutate(month = str_to_lower(month)) %>%
   mutate(year = as.numeric(year)) #%>%
-#  mutate(year = ifelse(year <= 15, year + 2000, year))
+#  mutate(year = ifelse(year <= 15, year + 2000, year)) # Was working on a way to convert this using conditionals, ifelse etc..
 
 #Not sure about year values (lacking first two digits?) Class for year is "character", but was "date" for prez data. Converted to numeric.
 
@@ -170,8 +170,11 @@ head(merge_unemployment_with_snp_pol)
 nyc_names = read_csv("./data/Popular_Baby_Names.csv") %>%
   janitor::clean_names() %>%
   mutate(childs_first_name = str_to_lower(childs_first_name)) %>%
-  distinct()
+  distinct() %>%
+  separate(col = ethnicity, into = c("race1", "race2"), sep = "AND")
   
+#For the tables, make the data wide and introduce ethnicity 
+
 
 ```
 
