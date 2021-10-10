@@ -6,7 +6,6 @@ output: github_document
 library(tidyverse)
 library(readxl)
 
-
 knitr::opts_chunk$set(
   fig.width = 6,
   fig.asp = .6,
@@ -79,9 +78,11 @@ prcp_2yrs <- bind_rows(prcp_18, prcp_19) %>% mutate(month.name[prcp_2yrs$Month])
 ```{r}
 pols_month = read_csv("./data/pols-month.csv") %>%
   separate(mon, sep = "-", into = c("year", "month", "day")) %>% 
-  mutate(month = month.name[as.numeric(month)]) %>%
-  mutate(president = recode(prez_gop, `1` = "gop", `0` = "dem"), president = factor(president)) %>% select(-prez_dem, -prez_gop, -day)
-  
+  mutate(month = month.abb[as.numeric(month)]) %>%
+  mutate(president = recode(prez_gop, `1` = "gop", `0` = "dem"), president = factor(president)) %>% select(-prez_dem, -prez_gop, -day) %>%
+  mutate(month = str_to_lower(month)) %>%
+  mutate(year = as.numeric(year))
+
 
 
 
@@ -89,56 +90,71 @@ pols_month = read_csv("./data/pols-month.csv") %>%
 ```
 
 * Second, clean the data in snp.csv using a similar process to the above. For consistency across datasets, arrange according to year and month, and organize so that year and month are the leading columns. *Progress*
+
+
+If year is from 00 to 15, add 2000
+
+else
+
+add 1900
+
+
 ```{r}
 snp_close = read_csv("./data/snp.csv") %>%
+  janitor::clean_names() %>%
   separate(date, sep = "/", into = c("month", "day", "year")) %>% 
   relocate(year, month) %>% 
-  mutate(month = month.name[as.numeric(month)]) %>% 
-  select(-day)
-  
-if (test_expression) {
-statement1
-} else {
-statement2
-}
+  mutate(month = month.abb[as.numeric(month)]) %>% 
+  select(-day) %>% 
+  mutate(month = str_to_lower(month)) %>%
+  mutate(year = as.numeric(year)) #%>%
+#  mutate(year = ifelse(year <= 15, year + 2000, year))
 
-
-
-
-
-
-
+#Not sure about year values (lacking first two digits?) Class for year is "character", but was "date" for prez data. Converted to numeric.
 
 ```
 
-
-* Third, tidy the unemployment data so that it can be merged with the previous datasets. This process will involve switching from “wide” to “long” format; ensuring that key variables have the same name; and ensuring that key variables take the same values. *Progress*
+* Third, tidy the unemployment data so that it can be merged with the previous datasets. This process will involve switching from “wide” to “long” format; ensuring that key variables have the same name; and ensuring that key variables take the same values. **Complete**
 
 ```{r}
-unemployment = read_csv("./data/unemployment.csv")
+unemployment = read_csv("./data/unemployment.csv") %>%
+  janitor::clean_names() %>%
+  pivot_longer(jan:dec, 
+               names_to = "month",
+               values_to ="rate_unemployment")
+
+#This made me go back and convert to lower cased abbreviations instead of using month.name as I could not find a way to convert from abb --> full name. 
 
 ```
 
 
-* Join the datasets by merging snp into pols, and merging unemployment into the result. *Progress*
+* Join the datasets by **merging snp into pols**, and merging unemployment into the result. *Progress*
 
 ```{r}
+merge_snp_pols <- left_join(pols_month, snp_close, by = c("month" = "month", "year" = "year")) # SNP closing data is gone due to the 2 digit year error.
 
+merge_unemployment_with_snp_pol <- left_join(merge_snp_pols, unemployment, by = c("month" = "month", "year" = "year")) 
 ```
-
 
 * Write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset.
 
+
+These three datasets contain unemployment rates, the closing value of the SNP index, and the current assembly of government.Each dataset contained months and years, which were used to link the three sheets together. The resulting dataset could, in theory be used to examine correlations, perhaps tenuously, between government, employment, and the SNP points at market close.
+
+
 * give the dimension
-
+```{r}
+dim(merge_unemployment_with_snp_pol)
+```
 * range of years
+```{r}
+range(merge_unemployment_with_snp_pol$year)
+```
 
-* names of key variables). *Progress*
-
-
-
-
-
+* names of key variables.
+```{r}
+head(merge_unemployment_with_snp_pol)
+```
 
 ## **Problem 3** 
 * Load and tidy the data.
