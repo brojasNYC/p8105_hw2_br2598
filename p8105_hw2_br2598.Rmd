@@ -1,0 +1,161 @@
+---
+title: "Homework 2 P8105, Brandon Rojas"
+output: github_document
+---
+```{r}
+library(tidyverse)
+library(readxl)
+
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+## **Problem 1** 
+Read and clean the Mr. Trash Wheel sheet:
+
+* specify the sheet in the Excel file and to omit non-data entries (rows with notes / figures; columns containing notes) using arguments in read_excel **complete**
+* use reasonable variable names -- **Complete**
+* omit rows that do not include dumpster-specific data -- **Complete**
+* round the number of sports balls to the nearest integer  -- **Complete**
+
+
+* Write a paragraph about these data; you are encouraged to use inline R. Be sure to **note the number of observations in both resulting datasets**, and give examples of **key variables**. For available data, **what was the total precipitation in 2018**? What was the **median number of sports balls in a dumpster in 2019**?
+
+```{r}
+mr_trash_data = read_excel("./data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx", sheet = "Mr. Trash Wheel") #Header image on row 1 removed automatically?
+janitor::clean_names(mr_trash_data) #camel case col names
+mr_trash_data = select(mr_trash_data, -'...15', -'...16', -'...17') #Removes the comments and several unused empty columns
+mr_trash_data = mr_trash_data[!is.na(mr_trash_data$Dumpster), ] #Removes the "Totals" rows.
+mr_trash_data$`Sports Balls` <-round(mr_trash_data$`Sports Balls`)
+
+
+## For Max Style Points
+
+
+```
+
+## Problem 1, Precipitation data
+
+* Read and clean precipitation data for 2018 and 2019. **Complete**
+* For each, omit rows without precipitation data and add a variable for year. **Complete**
+* Next, combine precipitation datasets *use join* 
+* convert month to a character variable (the variable month.name is built into R and should be useful). **Complete** 
+
+```{r}
+prcp_19 = read_excel("./data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx", sheet = "2019 Precipitation", skip = 1)
+prcp_19 = prcp_19[!is.na(prcp_19$Month), ] #Removes the "Totals" rows.
+prcp_19['Year'] <- 2019
+
+
+prcp_18 = read_excel("./data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx", sheet = "2018 Precipitation", skip = 1)
+prcp_18 = prcp_18[!is.na(prcp_18$Month), ] #Removes the "Totals" rows.
+prcp_18['Year'] <- 2018
+
+
+prcp_2yrs <- bind_rows(prcp_18, prcp_19) %>% mutate(month.name[prcp_2yrs$Month])
+
+```
+
+
+## **Problem 2**
+
+**Our goal is to merge these into a single data frame using year and month as keys across datasets.**
+
+* First, clean the data in pols-month.csv. Use separate() to break up the variable mon into integer variables year, month, and day; replace month number with month name; **Complete**
+
+* create a president variable taking values gop and dem, and remove prez_dem and prez_gop; and remove the day variable. **Complete**
+
+```{r}
+pols_month = read_csv("./data/pols-month.csv") %>%
+  separate(mon, sep = "-", into = c("year", "month", "day")) %>% 
+  mutate(month = month.name[as.numeric(month)]) %>%
+  mutate(president = recode(prez_gop, `1` = "gop", `0` = "dem"), president = factor(president)) %>% select(-prez_dem, -prez_gop, -day)
+  
+
+
+
+
+```
+
+* Second, clean the data in snp.csv using a similar process to the above. For consistency across datasets, arrange according to year and month, and organize so that year and month are the leading columns. *Progress*
+```{r}
+snp_close = read_csv("./data/snp.csv") %>%
+  separate(date, sep = "/", into = c("month", "day", "year")) %>% 
+  relocate(year, month) %>% 
+  mutate(month = month.name[as.numeric(month)]) %>% 
+  select(-day)
+  
+if (test_expression) {
+statement1
+} else {
+statement2
+}
+
+
+
+
+
+
+
+
+```
+
+
+* Third, tidy the unemployment data so that it can be merged with the previous datasets. This process will involve switching from “wide” to “long” format; ensuring that key variables have the same name; and ensuring that key variables take the same values. *Progress*
+
+```{r}
+unemployment = read_csv("./data/unemployment.csv")
+
+```
+
+
+* Join the datasets by merging snp into pols, and merging unemployment into the result. *Progress*
+
+```{r}
+
+```
+
+
+* Write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset.
+
+* give the dimension
+
+* range of years
+
+* names of key variables). *Progress*
+
+
+
+
+
+
+## **Problem 3** 
+* Load and tidy the data.
+
+* Note that, although these data may seem fairly well formatted initially, the names of a categorical predictor and the case structure of string variables changed over time; you’ll need to address this in your data cleaning. *Progress*
+
+* Also, some rows seem duplicated, and these will need to be removed (hint: google something like “dplyr remove duplicate rows” to get started). *Progress*
+
+* Produce a well-structured, reader-friendly table showing the rank in popularity of the name “Olivia” as a female baby name over time; this should have rows for ethnicities and columns for year. *Progress*
+
+* Produce a similar table showing the most popular name among male children over time. *Progress*
+
+* Finally, for male, white non-hispanic children born in 2016, produce a scatter plot showing the number of children with a name (y axis) against the rank in popularity of that name (x axis). *Progress*
+
+
+```{r}
+
+```
+
+
